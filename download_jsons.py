@@ -13,16 +13,18 @@ def get_authtoken():
 
 
 def download_repos(session, repo_list_fpath, out_fpath):
-    urls = None
+    print('===== Download Repos Start =====')
+
     with open(repo_list_fpath, 'r') as f:
         urls = json.load(f)
 
     result = []
-    for u in map(lambda url: url.replace('github.com', 'api.github.com/repos'), urls):
-        print('fetching repo - %s' % u)
-        j = session.get(u).json()
-        if j is not None:
-            result.append(j)
+    for url in map(lambda u: u.replace('github.com', 'api.github.com/repos'), urls):
+        print(url)
+        response = session.get(url)
+        response.raise_for_status()
+        j = response.json()
+        result.append(j)
 
     try:
         os.remove(out_fpath)
@@ -31,31 +33,33 @@ def download_repos(session, repo_list_fpath, out_fpath):
     with open(out_fpath, 'a+') as f:
         f.write(json.dumps(result))
 
+    print('===== Repos Download Complete =====\n\n')
+
 
 def download_issues(session, repo_json_fpath, out_issues_fpath, out_labels_fpath):
-    repos = None
+    print('===== Download Issues Start =====')
+
     with open(repo_json_fpath, 'r') as f:
         repos = json.load(f)
 
     result = []
     labels = []
-    for r in repos:
-        url = r['url'] + '/issues?state=open'
+    for repo in repos:
+        url = repo['url'] + '/issues?state=open'
         page = url
         while page is not None:
-            print('fetching issues - %s' % page)
+            print(page)
 
             response = session.get(page)
-            js = response.json()
-            if js is None:
-                break
+            response.raise_for_status()
 
-            # manually insert repository_id for each issue
+            js = response.json()
             for j in js:
-                j['repo_id'] = r['id']
+                j['repo_id'] = repo['id']
 
             result += js
             labels += [l['name'] for j in js for l in j['labels']]
+
             if 'Link' not in response.headers:
                 page = None
             else:
@@ -72,12 +76,13 @@ def download_issues(session, repo_json_fpath, out_issues_fpath, out_labels_fpath
     with open(out_labels_fpath, 'a+') as f:
         f.write(json.dumps(list(set(labels))))
 
+    print('===== Download Issues Complete =====\n\n')
+
 
 def download():
     authtoken = get_authtoken()
     if authtoken is None:
-        print('token not set in config.json')
-        return
+        raise Exception('Autoken not set in config.json')
 
     s = requests.Session()
     s.headers.update({'Accept': 'application/vnd.github.v3+json'})

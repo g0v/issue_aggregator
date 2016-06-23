@@ -4,6 +4,8 @@ import json
 import psycopg2
 
 def drop_tables(db, user):
+    print('droping tables')
+
     sql_drop_repos_table = 'DROP TABLE IF EXISTS repos'
     sql_drop_issues_table = 'DROP TABLE IF EXISTS issues'
     sql_drop_labels_table = 'DROP TABLE IF EXISTS labels'
@@ -25,9 +27,12 @@ def drop_tables(db, user):
         if conn is not None:
             conn.close()
 
+    print('tables dropped\n')
+
 
 def create_repos_table(db, user, json_fpath):
-    repos = None
+    print('creating repos table')
+
     with open(json_fpath, 'r') as f:
         repos = json.load(f)
 
@@ -69,9 +74,12 @@ def create_repos_table(db, user, json_fpath):
         cur.close()
         conn.close()
 
+    print('repos table created\n')
+
 
 def create_issues_table(db, user, json_fpath):
-    issues = None
+    print('creating issues table')
+
     with open(json_fpath, 'r') as f:
         issues = json.load(f)
 
@@ -123,9 +131,12 @@ def create_issues_table(db, user, json_fpath):
         cur.close()
         conn.close()
 
+    print('issues table created\n')
+
 
 def create_labels_table(db, user, json_fpath):
-    labels = None
+    print('creating labels table')
+
     with open(json_fpath, 'r') as f:
         labels = json.load(f)
 
@@ -134,8 +145,7 @@ def create_labels_table(db, user, json_fpath):
         cur = conn.cursor()
 
         # create table
-        sql_create_table = ('CREATE TABLE labels (id serial PRIMARY KEY, '
-        'name varchar);')
+        sql_create_table = 'CREATE TABLE labels (id serial PRIMARY KEY, name varchar);'
         cur.execute(sql_create_table)
 
         #insert rows
@@ -151,10 +161,13 @@ def create_labels_table(db, user, json_fpath):
         cur.close()
         conn.close()
 
+    print('labels table created')
+
 
 if __name__ == '__main__':
+    print('===== DB Creation Start =====')
+
     # conn = psycopg2.connect('dbname=db user=user host=localhost password=xxx')
-    db, user = None, None
     with open('./config.json', 'r') as f:
         config = json.load(f)
         db = config['db']
@@ -165,5 +178,4 @@ if __name__ == '__main__':
     create_issues_table(db, user, './data/issues.json')
     create_labels_table(db, user, './data/labels.json')
 
-    print('done')
-
+    print('===== DB Creation Complete =====\n\n')

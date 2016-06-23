@@ -16,9 +16,8 @@ def run(u, p):
             g0v = o
             break
 
-    if g0v is None:
-        print('g0v is None')
-        return
+    if not g0v:
+        raise Exception('g0v is None')
 
     # get repos
     urls = []
@@ -43,6 +42,6 @@ if __name__ == '__main__':
     username = input('Enter Github username:')
     password = getpass.getpass('Enter password:')
 
-    print('start..')
+    print('start')
     run(username, password)
-    print('finished!')
+    print('finished')

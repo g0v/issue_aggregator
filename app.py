@@ -10,7 +10,6 @@ from urllib.parse import quote, unquote, urlencode
 
 app = Flask(__name__)
 
-db, user = None, None
 with open('./config.json', 'r') as f:
     config = json.load(f)
     db = config['db']
@@ -22,13 +21,11 @@ def repos():
     with psycopg2.connect(database=db, user=user) as conn:
         with conn.cursor() as cur:
             sql = "SELECT data FROM repos"
-
-            ids = request.args.get('ids')
-            ids = ids.split(',') if ids else None
-            if ids:
+            ids = []
+            if 'ids' in request.args:
+                ids = [i.strip() for i in request.args.get('ids').split(',')]
                 sql += " WHERE id IN (%s)" % ','.join(['%s']*len(ids))
-            sql += " ORDER BY data->>'updated_at' DESC;"
-
+                sql += " ORDER BY data->>'updated_at' DESC;"
             cur.execute(sql, ids)
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
@@ -40,19 +37,16 @@ def repos():
 def issues():
     with psycopg2.connect(database=db, user=user) as conn:
         with conn.cursor() as cur:
-            language = request.args.get('language')
-            labels_arg = request.args.get('labels')
-            labels = [l.strip() for l in labels_arg.split(',')] if labels_arg else None
-
             sql = "SELECT a.data from "
-            if labels:
+            if 'labels' in request.args:
+                labels = [l.strip() for l in request.args.get('labels').split(',')]
                 sql += "(SELECT * FROM issues, jsonb_array_elements(data->'labels') l WHERE l->>'name' = Any ('{%s}')) AS a" % ','.join(labels)
             else:
                 sql += "(SELECT * FROM issues) AS a"
-            if language:
+            if 'language' in request.args:
+                language = request.args.get('language')
                 sql += " INNER JOIN (SELECT r.id FROM repos r WHERE lower(r.data->>'language') = '%s') AS b ON a.repo_id = b.id" % language
             sql += " ORDER BY a.data->>'updated_at' DESC;"
-
             cur.execute(sql)
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
@@ -84,13 +78,14 @@ def gas():
 
         with open('./data/url_list.json', 'r') as f:
             urls = json.load(f)
-        q += ''.join([u.replace('https://github.com/', ' repo:') for u in urls])
+            q += ''.join([u.replace('https://github.com/', ' repo:') for u in urls])
 
         if 'language' in request.args:
             q += ' language:%s' % request.args.get('language')
 
         if 'labels' in request.args:
-            q += ''.join([' label:%s' % l for l in request.args.getlist('labels')])
+            labels = [l.strip() for l in request.args.get('labels').split(',')]
+            q += ''.join([' label:%s' % l for l in labels])
 
         params = {'q': q, 'l': '', 'o': 'desc', 'ref': 'advsearch', 's': 'updated', 'type': 'Issues', 'utf8': '✓'}
         query = '/search?%s' % urlencode(params)

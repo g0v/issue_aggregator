@@ -1,6 +1,10 @@
-from flask import Flask, request, jsonify
+import datetime
 import json
 import psycopg2
+import requests
+from bs4 import BeautifulSoup
+from flask import Flask, request, jsonify
+from urllib.parse import quote, unquote, urlencode
 
 app = Flask(__name__)
 
@@ -9,6 +13,7 @@ with open('./config.json', 'r') as f:
     config = json.load(f)
     db = config['db']
     user = config['user']
+
 
 @app.route('/api/repos', methods=['GET'])
 def repos():
@@ -27,6 +32,7 @@ def repos():
             j = {'result': [r[0] for r in rs]}
             return jsonify(**j)
     abort(500)
+
 
 @app.route('/api/issues', methods=['GET'])
 def issues():
@@ -51,6 +57,7 @@ def issues():
             return jsonify(**j)
     abort(500)
 
+
 @app.route('/api/labels', methods=['GET'])
 def labels():
     with psycopg2.connect(database=db, user=user) as conn:
@@ -62,5 +69,67 @@ def labels():
     abort(500)
 
 
+@app.route('/api/gas', methods=['GET'])
+def gas():
+    gdn = 'https://www.github.com'
+
+    if 'prev_page' in request.args:
+        query = unquote(request.args.get('prev_page'))
+    elif 'next_page' in request.args:
+        query = unquote(request.args.get('next_page'))
+    else:
+        q = 'state:open updated:<%s' % datetime.datetime.utcnow().isoformat()
+
+        with open('./data/url_list.json', 'r') as f:
+            urls = json.load(f)
+        q += ''.join([u.replace('https://github.com/', ' repo:') for u in urls])
+
+        if 'language' in request.args:
+            q += ' language:%s' % request.args.get('language')
+
+        if 'labels' in request.args:
+            q += ''.join([' label:%s' % l for l in request.args.getlist('labels')])
+
+        params = {'q': q, 'l': '', 'o': 'desc', 'ref': 'advsearch', 's': 'updated', 'type': 'Issues', 'utf8': '✓'}
+        query = '/search?%s' % urlencode(params)
+
+    j = {}
+    issues = []
+    r = requests.get(gdn + query)
+
+    # html parsing
+    soup = BeautifulSoup(r.text, 'html.parser')
+    items = soup.find_all('div', class_='issue-list-item public')
+    for item in items:
+        issue = {}
+        issue['sn'] = item.span.contents[0].replace('#', '')
+
+        all_p = item.find_all('p')
+        issue['html_url'] = gdn + all_p[0].a['href']
+        issue['title'] = all_p[0].a['title']
+        issue['body'] = all_p[1].contents[0] if all_p[1].contents else ''
+
+        all_li = item.ul.find_all('li')
+        issue['issues_html_url'] = gdn + all_li[0].a['href']
+        issue['user_html_url'] = gdn + all_li[1].a['href']
+        issue['updated_at'] = all_li[1].find('relative-time')['datetime']
+        issue['comments'] = int(all_li[2].strong.contents[0]) if len(all_li) >= 3 else 0
+
+        issues.append(issue)
+
+    prev_page = soup.find('a', class_='prev_page')
+    if prev_page:
+        j['prev_page'] = quote(unquote(prev_page['href']))
+
+    next_page = soup.find('a', class_='next_page')
+    if next_page:
+        j['next_page'] = quote(unquote(next_page['href']))
+
+    j['result'] = issues
+
+    return jsonify(**j)
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
+

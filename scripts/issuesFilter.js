@@ -113,6 +113,7 @@ const IssuesFilter = React.createClass({
     this.load();
   },
   load: function() {
+    const HOSTNAME = "ec2-54-238-189-115.ap-northeast-1.compute.amazonaws.com";
     let groupedFilters = {};
     this.state.filters.forEach(function(filter) {
       let filterName = Object.keys(filter)[0], paramKey;
@@ -122,13 +123,13 @@ const IssuesFilter = React.createClass({
       groupedFilters[paramKey].push(filter.query);
     })
     let params = Object.keys(groupedFilters).map(function(paramKey) { return (paramKey + '=' + groupedFilters[paramKey].join()); });
-    let apiUrl = "/api/issues" + (params.length > 0 ? '?' : '') + params.join('&');
+    let apiUrl = HOSTNAME + "/api/issues" + (params.length > 0 ? '?' : '') + params.join('&');
     //console.log('issue loading: ', apiUrl);
 
     $.getJSON(apiUrl, function(dataIssues) {
       this.setState({data: dataIssues.result});
       let repoIds = dataIssues.result.map(function(dataIssue) { return dataIssue.repo_id; });
-      $.getJSON("/api/repos?ids="+repoIds.join(), function(dataRepos) {
+      $.getJSON(HOSTNAME + "/api/repos?ids="+repoIds.join(), function(dataRepos) {
         let reposMapping = this.state.reposMapping;
         dataRepos.result.forEach(function(dataRepo, index) { reposMapping[dataRepo.id] = index; });
         this.setState({repos:dataRepos.result, reposMapping: reposMapping});

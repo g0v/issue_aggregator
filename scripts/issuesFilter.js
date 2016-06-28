@@ -113,7 +113,7 @@ const IssuesFilter = React.createClass({
     this.load();
   },
   load: function() {
-    const HOSTNAME = "http://ec2-54-238-189-115.ap-northeast-1.compute.amazonaws.com";
+    const HOSTNAME = "//ec2-54-238-189-115.ap-northeast-1.compute.amazonaws.com";
     let groupedFilters = {};
     this.state.filters.forEach(function(filter) {
       let filterName = Object.keys(filter)[0], paramKey;

@@ -6,9 +6,11 @@ import psycopg2
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 from urllib.parse import quote, unquote, urlencode
 
 app = Flask(__name__)
+CORS(app)
 
 with open('./config.json', 'r') as f:
     config = json.load(f)

@@ -46,7 +46,7 @@ def issues():
             else:
                 sql += "(SELECT * FROM issues) AS a"
             if 'language' in request.args:
-                language = request.args.get('language')
+                language = request.args.get('language').lower()
                 sql += " INNER JOIN (SELECT r.id FROM repos r WHERE lower(r.data->>'language') = '%s') AS b ON a.repo_id = b.id" % language
             sql += " ORDER BY a.data->>'updated_at' DESC;"
             cur.execute(sql)

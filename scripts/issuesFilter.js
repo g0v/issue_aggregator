@@ -153,7 +153,7 @@ const IssuesFilter = React.createClass({
       this.setState({filters: filters}, this.load);
     }.bind(this);
 
-    let styleContainer = { width:"96%", maxWidth:960, margin:"auto", padding:"26px 44px", backgroundColor:"white" };
+    let styleContainer = { width:"96%", maxWidth:960, minHeight:'100vh', margin:"auto", padding:"26px 44px", backgroundColor:"white" };
 
     let filterNodes = this.state.filters.map(function(filterData, index) {
       let styleFilterNode = { display:'inline-block', marginRight:10, padding:'7px 8px', border:'1px solid #ababab', borderRadius:2 },

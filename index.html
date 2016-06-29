@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="SHORTCUT ICON" href="http://g0v.tw/g0v.ico">
 <title>Issues</title>
 <meta name="keywords" content="g0v, gov, github, issue, issues, github-issues, issue-tracker">
 <meta name="description" content="g0v issue tracker">
@@ -14,10 +15,18 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/react/15.0.2/react-dom.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script>
+  $(document).ajaxStart(function() {
+    $(document.body).css('cursor', 'wait');
+  })
+  $(document).ajaxComplete(function() {
+    $(document.body).css('cursor', 'auto');
+  })
+</script>
 </head>
 <body>
 
-<div id="issuesFilterContainer" style="background-color:#FAFAFA"></div>
+<div id="issuesFilterContainer" style="background-color:#FAFAFA;"></div>
 <script type="text/babel" src="scripts/issuesFilter.js"></script>
 
 </body>

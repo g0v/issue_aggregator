@@ -162,7 +162,7 @@ const IssuesFilter = React.createClass({
       return (
         <li key={filterData.filter+filterData.query} style={{...styleFilterNode,...fontFilterNode}}>
           <span>{filterData.filter}:{filterData.query}</span>
-          <button type="button" className="nude" style={styleRemoveButton} value={index} onClick={handleRemoveFilterButtonClick}><img src="/static/images/icon_remove.png" /></button>
+          <button type="button" className="nude" style={styleRemoveButton} value={index} onClick={handleRemoveFilterButtonClick}><img src="/images/icon_remove.png" /></button>
         </li>
       );
     });

@@ -46,3 +46,23 @@ a.nude {
   color: inherit;
   text-decoration: none;
 }
+
+/* page css start */
+
+.title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-right: 10%;
+}
+
+.word-ellipsis {
+  white-space: nowrap;
+  overflow:hidden;
+  text-overflow: ellipsis;
+}
+.issue-date {
+  position: absolute;
+  line-height: 32px;
+  right: 0;
+}

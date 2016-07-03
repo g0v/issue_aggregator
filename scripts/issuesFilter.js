@@ -57,7 +57,7 @@ const Issue = React.createClass({
       return { display:'inline-block', height:18, lineHeight:'18px', verticalAlign:'middle', fontSize:12, letterSpacing:'0.9px', fontWeight:'bolder', paddingLeft:5, paddingRight:5, marginRight:4, color:textColor, backgroundColor:'#'+bgColor };
     }
     let styleLabelLanguage = { border:'1px solid #6e6e6e', borderRadius:1, lineHeight:'16px' };
-    let styleTimestamp = { textAlign:'right', verticalAlign:'top', fontSize:14, fontWeight:'300', color:'#999' }
+    let styleTimestamp = { textAlign:'right', fontSize:14, fontWeight:'300', color:'#999' }
     let styleDescription = { marginTop:12, paddingRight:'20%', fontSize:15, lineHeight:'19px', fontFamily:'Helvetica Neue', fontWeight:'300', color:'#3C3C3C', letterSpacing:'0.1em', wordWrap:'break-word' }
     let styleRepoInfo = { marginTop:30 }
     let styleRepoName = { fontSize:14, color:'#808080', fontWeight:'bolder', letterSpacing:'0.1em' }
@@ -77,16 +77,15 @@ const Issue = React.createClass({
       <li style={this.props.style}>
         <div style={styleRow}>
           <a href={this.props.data.html_url} target="_blank" className="nude">
-            <span style={{display:'inline-block', width:'90%'}}>
-              <span style={styleTitle}>
+            <span className="title">
+              <span style={styleTitle} className="word-ellipsis">
                 <span style={styleTitleFirstLetter}>{this.props.data.title.substr(0,1)}</span>
                 {this.props.data.title.substr(1)}
               </span>
-
               {labelNodes}
+              <span style={{...{display:'inline-block'},...styleTimestamp}} className="issue-date">{dataUpdatedAt}</span>
             </span>
 
-            <span style={{...{display:'inline-block',width:'10%'},...styleTimestamp}}>{dataUpdatedAt}</span>
 
             <div style={styleDescription}>
               <span>{this.props.data.body.substr(0,200)}{this.props.data.body.length > 200 ? '...' : ''}</span>
@@ -146,7 +145,7 @@ const IssuesFilter = React.createClass({
         this.setState({filters: filters}, this.load);
       }
     }.bind(this);
-    
+
     let handleRemoveFilterButtonClick = function(e) {
       let filters = JSON.parse(JSON.stringify(this.state.filters));
       filters.splice(e.currentTarget.value, 1);

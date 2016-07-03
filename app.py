@@ -17,6 +17,20 @@ with open('./config.json', 'r') as f:
     db = config['db']
     user = config['user']
 
+def append_limit_offset_sql(request, sql):
+    try:
+        limit = int(request.args.get('limit'))
+    except Exception as e:
+        limit = 30
+    sql += " LIMIT %d" % limit
+
+    try:
+        offset = int(request.args.get('offset'))
+    except Exception as e:
+        offset = 0
+    sql += " OFFSET %d" % offset
+
+    return sql
 
 @app.route('/api/repos', methods=['GET'])
 def repos():
@@ -27,7 +41,8 @@ def repos():
             if 'ids' in request.args:
                 ids = [i.strip() for i in request.args.get('ids').split(',')]
                 sql += " WHERE id IN (%s)" % ','.join(['%s']*len(ids))
-                sql += " ORDER BY data->>'updated_at' DESC;"
+                sql += " ORDER BY data->>'updated_at' DESC"
+            sql = append_limit_offset_sql(request, sql) + ";"
             cur.execute(sql, ids)
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
@@ -48,7 +63,8 @@ def issues():
             if 'language' in request.args:
                 language = request.args.get('language').lower()
                 sql += " INNER JOIN (SELECT r.id FROM repos r WHERE lower(r.data->>'language') = '%s') AS b ON a.repo_id = b.id" % language
-            sql += " ORDER BY a.data->>'updated_at' DESC;"
+            sql += " ORDER BY a.data->>'updated_at' DESC"
+            sql = append_limit_offset_sql(request, sql) + ";"
             cur.execute(sql)
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
@@ -60,7 +76,9 @@ def issues():
 def labels():
     with psycopg2.connect(database=db, user=user) as conn:
         with conn.cursor() as cur:
-            cur.execute('SELECT name FROM labels ORDER BY name DESC;')
+            sql = 'SELECT name FROM labels ORDER BY name DESC'
+            sql = append_limit_offset_sql(request, sql) + ";"
+            cur.execute(sql)
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
             return jsonify(**j)

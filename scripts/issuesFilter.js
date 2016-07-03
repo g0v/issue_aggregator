@@ -128,11 +128,13 @@ const IssuesFilter = React.createClass({
     $.getJSON(apiUrl, function(dataIssues) {
       this.setState({data: dataIssues.result});
       let repoIds = dataIssues.result.map(function(dataIssue) { return dataIssue.repo_id; });
-      $.getJSON(HOSTNAME + "/api/repos?ids="+repoIds.join(), function(dataRepos) {
-        let reposMapping = this.state.reposMapping;
-        dataRepos.result.forEach(function(dataRepo, index) { reposMapping[dataRepo.id] = index; });
-        this.setState({repos:dataRepos.result, reposMapping: reposMapping});
-      }.bind(this));
+      if ( repoIds.length !== 0 ) {
+        $.getJSON(HOSTNAME + "/api/repos?ids="+repoIds.join(), function(dataRepos) {
+          let reposMapping = this.state.reposMapping;
+          dataRepos.result.forEach(function(dataRepo, index) { reposMapping[dataRepo.id] = index; });
+          this.setState({repos:dataRepos.result, reposMapping: reposMapping});
+        }.bind(this));
+      }
     }.bind(this));
   },
   render: function() {

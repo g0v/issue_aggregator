@@ -43,7 +43,7 @@ def create_repos_table(db, user, json_fpath):
         cur.execute(sql_create_table)
         col_names = ['id', 'data']
         for r in repos:
-            sql_insert = 'INSERT INTO repos (id, data) VALUES (%s, %s::jsonb);'
+            sql_insert = 'INSERT INTO repos (id, data) VALUES (%s, %s::jsonb) ON CONFLICT DO NOTHING;'
             cur.execute(sql_insert, (r['id'], json.dumps(r),))
     except psycopg2.DatabaseError as e:
         print(e)
@@ -70,7 +70,7 @@ def create_issues_table(db, user, json_fpath):
         cur.execute(sql_create_table)
         col_names = ['id','repo_id', 'data']
         for i in issues:
-            sql_insert = 'INSERT INTO issues (id, repo_id, data) VALUES (%s, %s, %s::jsonb);'
+            sql_insert = 'INSERT INTO issues (id, repo_id, data) VALUES (%s, %s, %s::jsonb) ON CONFLICT DO NOTHING;'
             cur.execute(sql_insert, (i['id'], i['repo_id'], json.dumps(i),))
     except psycopg2.DatabaseError as e:
         print(e)
@@ -96,7 +96,7 @@ def create_labels_table(db, user, json_fpath):
         sql_create_table = 'CREATE TABLE labels (id serial PRIMARY KEY, name varchar);'
         cur.execute(sql_create_table)
         for l in labels:
-            sql_insert = 'INSERT INTO labels (name) VALUES (%s)'
+            sql_insert = 'INSERT INTO labels (name) VALUES (%s) ON CONFLICT DO NOTHING;'
             cur.execute(sql_insert, (l,))
     except psycopg2.DatabaseError as e:
         print(e)

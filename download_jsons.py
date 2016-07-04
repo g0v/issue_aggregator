@@ -20,9 +20,12 @@ def download_repos(session, repo_list_fpath, out_fpath):
 
     result = []
     for url in map(lambda u: u.replace('github.com', 'api.github.com/repos'), urls):
+        url = url[:-1] if url[-1] is '/' else url
         print(url)
         response = session.get(url)
-        response.raise_for_status()
+        # response.raise_for_status()
+        if response.status_code // 100 != 2:
+            continue
         j = response.json()
         result.append(j)
 

@@ -5,8 +5,8 @@ import json
 import psycopg2
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, request, jsonify
-from flask_cors import CORS, cross_origin
+from flask import Flask, request, jsonify, abort
+from flask_cors import CORS
 from urllib.parse import quote, unquote, urlencode
 
 app = Flask(__name__)
@@ -16,6 +16,7 @@ with open('./config.json', 'r') as f:
     config = json.load(f)
     db = config['db']
     user = config['user']
+
 
 def append_limit_offset_sql(request, sql):
     try:
@@ -32,6 +33,7 @@ def append_limit_offset_sql(request, sql):
 
     return sql
 
+
 @app.route('/api/repos', methods=['GET'])
 def repos():
     with psycopg2.connect(database=db, user=user) as conn:
@@ -40,7 +42,7 @@ def repos():
             ids = []
             if 'ids' in request.args:
                 ids = [i.strip() for i in request.args.get('ids').split(',')]
-                sql += " WHERE id IN (%s)" % ','.join(['%s']*len(ids))
+                sql += " WHERE id IN (%s)" % ','.join(['%s'] * len(ids))
                 sql += " ORDER BY data->>'updated_at' DESC"
             sql = append_limit_offset_sql(request, sql) + ";"
             cur.execute(sql, ids)
@@ -149,4 +151,3 @@ def gas():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
-

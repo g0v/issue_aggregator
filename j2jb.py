@@ -3,6 +3,7 @@
 import json
 import psycopg2
 
+
 def drop_tables(db, user):
     print('droping tables')
 
@@ -41,7 +42,6 @@ def create_repos_table(db, user, json_fpath):
         cur = conn.cursor()
         sql_create_table = ('CREATE TABLE repos (id integer PRIMARY KEY, data jsonb);')
         cur.execute(sql_create_table)
-        col_names = ['id', 'data']
         for r in repos:
             sql_insert = 'INSERT INTO repos (id, data) VALUES (%s, %s::jsonb) ON CONFLICT DO NOTHING;'
             cur.execute(sql_insert, (r['id'], json.dumps(r),))
@@ -68,7 +68,6 @@ def create_issues_table(db, user, json_fpath):
         cur = conn.cursor()
         sql_create_table = 'CREATE TABLE issues (id integer PRIMARY KEY, repo_id integer REFERENCES repos(id), data jsonb);'
         cur.execute(sql_create_table)
-        col_names = ['id','repo_id', 'data']
         for i in issues:
             sql_insert = 'INSERT INTO issues (id, repo_id, data) VALUES (%s, %s, %s::jsonb) ON CONFLICT DO NOTHING;'
             cur.execute(sql_insert, (i['id'], i['repo_id'], json.dumps(i),))
@@ -125,4 +124,3 @@ if __name__ == '__main__':
     create_labels_table(db, user, './data/labels.json')
 
     print('===== DB Creation Complete =====')
-

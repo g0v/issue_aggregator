@@ -3,6 +3,7 @@
 import json
 import psycopg2
 
+
 def drop_tables(db, user):
     print('droping tables')
 
@@ -41,29 +42,27 @@ def create_repos_table(db, user, json_fpath):
         cur = conn.cursor()
 
         # create table
-        sql_create_table = (
-                'CREATE TABLE repos (id integer PRIMARY KEY, name varchar, '
-                'description text, url varchar, html_url varchar, language varchar, '
-                'languages_url varchar, open_issues_count integer, created_at date, '
-                'updated_at date, pushed_at date);')
+        sql_create_table = ('CREATE TABLE repos (id integer PRIMARY KEY, name varchar, '
+                            'description text, url varchar, html_url varchar, language varchar, '
+                            'languages_url varchar, open_issues_count integer, created_at date, '
+                            'updated_at date, pushed_at date);')
         cur.execute(sql_create_table)
 
         # insert rows
-        col_names = [
-                'id',
-                'name',
-                'description',
-                'url',
-                'html_url',
-                'language',
-                'languages_url',
-                'open_issues_count',
-                'created_at',
-                'updated_at',
-                'pushed_at']
+        col_names = ['id',
+                     'name',
+                     'description',
+                     'url',
+                     'html_url',
+                     'language',
+                     'languages_url',
+                     'open_issues_count',
+                     'created_at',
+                     'updated_at',
+                     'pushed_at']
         for r in repos:
             col_values = [r[k] for k in col_names]
-            sql_insert = 'INSERT INTO repos (%s) VALUES (%s);' % (', '.join(col_names), ', '.join(['%s']*len(col_values)))
+            sql_insert = 'INSERT INTO repos (%s) VALUES (%s);' % (', '.join(col_names), ', '.join(['%s'] * len(col_values)))
             cur.execute(sql_insert, col_values)
     except psycopg2.DatabaseError as e:
         print(e)
@@ -88,28 +87,26 @@ def create_issues_table(db, user, json_fpath):
         cur = conn.cursor()
 
         # create table
-        sql_create_table = (
-                'CREATE TABLE issues (id integer PRIMARY KEY, '
-                'repo_id integer REFERENCES repos(id), title varchar, body text, '
-                'state varchar, url varchar, html_url varchar, labels varchar[], '
-                'labels_url varchar, pull_request jsonb, created_at date, '
-                'updated_at date);')
+        sql_create_table = ('CREATE TABLE issues (id integer PRIMARY KEY, '
+                            'repo_id integer REFERENCES repos(id), title varchar, body text, '
+                            'state varchar, url varchar, html_url varchar, labels varchar[], '
+                            'labels_url varchar, pull_request jsonb, created_at date, '
+                            'updated_at date);')
         cur.execute(sql_create_table)
 
         # insert rows
-        col_names = [
-                'id',
-                'repo_id',
-                'title',
-                'body',
-                'state',
-                'url',
-                'html_url',
-                'labels',
-                'labels_url',
-                'pull_request',
-                'created_at',
-                'updated_at']
+        col_names = ['id',
+                     'repo_id',
+                     'title',
+                     'body',
+                     'state',
+                     'url',
+                     'html_url',
+                     'labels',
+                     'labels_url',
+                     'pull_request',
+                     'created_at',
+                     'updated_at']
         pr_idx = col_names.index('pull_request')
         lbs_idx = col_names.index('labels')
         for i in issues:
@@ -148,7 +145,7 @@ def create_labels_table(db, user, json_fpath):
         sql_create_table = 'CREATE TABLE labels (id serial PRIMARY KEY, name varchar);'
         cur.execute(sql_create_table)
 
-        #insert rows
+        # insert rows
         for l in labels:
             sql_insert = 'INSERT INTO labels (name) VALUES (%s)'
             cur.execute(sql_insert, (l,))

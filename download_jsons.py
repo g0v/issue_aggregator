@@ -5,6 +5,7 @@ import os
 import re
 import requests
 
+
 def get_authtoken():
     with open('./config.json', 'r') as f:
         config = json.load(f)
@@ -98,4 +99,3 @@ def download():
 
 if __name__ == '__main__':
     download()
-

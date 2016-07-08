@@ -18,20 +18,16 @@ with open('./config.json', 'r') as f:
     user = config['user']
 
 
-def append_limit_offset_sql(request, sql):
+def get_limit_offset(request):
     try:
         limit = int(request.args.get('limit'))
     except Exception as e:
         limit = 30
-    sql += " LIMIT %d" % limit
-
     try:
         offset = int(request.args.get('offset'))
     except Exception as e:
         offset = 0
-    sql += " OFFSET %d" % offset
-
-    return sql
+    return (limit, offset)
 
 
 @app.route('/api/repos', methods=['GET'])
@@ -39,13 +35,14 @@ def repos():
     with psycopg2.connect(database=db, user=user) as conn:
         with conn.cursor() as cur:
             sql = "SELECT data FROM repos"
-            ids = []
+            params = []
             if 'ids' in request.args:
-                ids = [i.strip() for i in request.args.get('ids').split(',')]
-                sql += " WHERE id IN (%s)" % ','.join(['%s'] * len(ids))
-                sql += " ORDER BY data->>'updated_at' DESC"
-            sql = append_limit_offset_sql(request, sql) + ";"
-            cur.execute(sql, ids)
+                ids = [int(i.strip()) for i in request.args.get('ids').split(',')]
+                sql += " WHERE id = Any(%s) ORDER BY data->>'updated_at' DESC"
+                params.append(ids)
+            sql += " LIMIT %s OFFSET %s;"
+            params += list(get_limit_offset(request))
+            cur.execute(sql, params)
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
             return jsonify(**j)
@@ -56,18 +53,21 @@ def repos():
 def issues():
     with psycopg2.connect(database=db, user=user) as conn:
         with conn.cursor() as cur:
-            sql = "SELECT a.data from "
+            sql = "SELECT a.data FROM"
+            params = []
             if 'labels' in request.args:
                 labels = [l.strip() for l in request.args.get('labels').split(',')]
-                sql += "(SELECT * FROM issues, jsonb_array_elements(data->'labels') l WHERE l->>'name' = Any ('{%s}')) AS a" % ','.join(labels)
+                sql += " (SELECT * FROM issues, jsonb_array_elements(data->'labels') l WHERE l->>'name' = Any(%s)) AS a"
+                params.append(labels)
             else:
-                sql += "(SELECT * FROM issues) AS a"
+                sql += " (SELECT * FROM issues) AS a"
             if 'language' in request.args:
                 language = request.args.get('language').lower()
-                sql += " INNER JOIN (SELECT r.id FROM repos r WHERE lower(r.data->>'language') = '%s') AS b ON a.repo_id = b.id" % language
-            sql += " ORDER BY a.data->>'updated_at' DESC"
-            sql = append_limit_offset_sql(request, sql) + ";"
-            cur.execute(sql)
+                sql += " INNER JOIN (SELECT r.id FROM repos r WHERE lower(r.data->>'language') = %s) AS b ON a.repo_id = b.id"
+                params.append(language)
+            sql += " ORDER BY a.data->>'updated_at' DESC LIMIT %s OFFSET %s;"
+            params += list(get_limit_offset(request))
+            cur.execute(sql, params)
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
             return jsonify(**j)
@@ -78,9 +78,9 @@ def issues():
 def labels():
     with psycopg2.connect(database=db, user=user) as conn:
         with conn.cursor() as cur:
-            sql = 'SELECT name FROM labels ORDER BY name DESC'
-            sql = append_limit_offset_sql(request, sql) + ";"
-            cur.execute(sql)
+            sql = 'SELECT name FROM labels ORDER BY name DESC LIMIT %s OFFSET %s;'
+            limit, offset = get_limit_offset(request)
+            cur.execute(sql, [limit, offset])
             rs = cur.fetchall()
             j = {'result': [r[0] for r in rs]}
             return jsonify(**j)

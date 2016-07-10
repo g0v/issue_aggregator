@@ -1,48 +1,47 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 
-import getpass
 import json
-import os
-from github import Github
+from requests import get
+from subprocess import Popen, PIPE
+
+repo_master_raw = 'https://raw.githubusercontent.com/g0v/awesome-g0v/master/'
+readme = 'readme.md'
+parser = 'parse.ls'
+awesome_g0v = 'awesome-g0v.json'
+outfile = 'url_list.json'
 
 
-# generate repo list to play with
-def run(u, p):
-    g = Github(u, p)
-    g0v = None
+def get_source():
+    readme_url = repo_master_raw + readme
+    parser_url = repo_master_raw + parser
 
-    # get orgs and extract g0v
-    for o in g.get_user().get_orgs():
-        if o.name == 'g0v':
-            g0v = o
-            break
+    with open('./data/{}'.format(readme), 'wb+') as f:
+        response = get(readme_url)
+        f.write(response.content)
 
-    if not g0v:
-        raise Exception('g0v is None')
+    with open('./data/{}'.format(parser), 'wb+') as f:
+        response = get(parser_url)
+        f.write(response.content)
 
-    # get repos
-    urls = []
-    count = 10
-    for r in g0v.get_repos():
-        if count <= 0:
-            break
-        count -= 1
-        urls.append(r.html_url)
 
-    os.makedirs('./data/', mode=0o755, exist_ok=True)
-    out_fpath = './data/url_list.json'
+def run_parser():
     try:
-        os.remove(out_fpath)
-    except OSError:
+        with Popen(['lsc', parser], cwd='./data/', stdout=PIPE) as p:
+            print(p.stdout.read().decode('utf-8'))
+    except Exception as e:
+        print(e)
         pass
-    with open(out_fpath, 'a+') as f:
-        f.write(json.dumps(urls))
 
 
-if __name__ == '__main__':
-    username = input('Enter Github username:')
-    password = getpass.getpass('Enter password:')
+def output_url_list():
+    with open('./data/{}'.format(awesome_g0v), 'r') as f:
+        js = json.load(f)
+        rs = [j['repository'] for j in js if 'github.com' in j['repository']]
 
-    print('start')
-    run(username, password)
-    print('finished')
+    with open('./data/{}'.format(outfile), 'w+') as f:
+        f.write(json.dumps(rs))
+
+if __name__ == "__main__":
+    get_source()
+    run_parser()
+    output_url_list()

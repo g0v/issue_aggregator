@@ -1,5 +1,5 @@
 # issue_aggregator
-http://www.g0vissues.jmehsieh.com </br>
+http://g0vissues.jmehsieh.com </br>
 搜尋 g0v repo issues by language & labels
 
 ### 共筆
@@ -10,7 +10,7 @@ http://www.g0vissues.jmehsieh.com </br>
 
 * 前端放在 gh-pages branch
 * 主機放在 aws (1 yr free tier)
-* dns: http://www.g0vissues.jmehsieh.com
+* dns: http://g0vissues.jmehsieh.com
 
 ### 如何運作
 * 想辦法取得 g0v repo list: url_list.json

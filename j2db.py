@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+
 import psycopg2
 
 
@@ -19,13 +20,12 @@ def drop_tables(db, user):
         cur.execute(sql_drop_labels_table)
     except psycopg2.DatabaseError as e:
         print(e)
-        pass
     else:
         conn.commit()
     finally:
-        if cur is not None:
+        if cur:
             cur.close()
-        if conn is not None:
+        if conn:
             conn.close()
 
     print('tables dropped\n')
@@ -66,7 +66,6 @@ def create_repos_table(db, user, json_fpath):
             cur.execute(sql_insert, col_values)
     except psycopg2.DatabaseError as e:
         print(e)
-        pass
     else:
         conn.commit()
     finally:
@@ -121,7 +120,6 @@ def create_issues_table(db, user, json_fpath):
             cur.execute(sql_insert, col_values)
     except psycopg2.DatabaseError as e:
         print(e)
-        pass
     else:
         conn.commit()
     finally:
@@ -151,7 +149,6 @@ def create_labels_table(db, user, json_fpath):
             cur.execute(sql_insert, (l,))
     except psycopg2.DatabaseError as e:
         print(e)
-        pass
     else:
         conn.commit()
     finally:

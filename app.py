@@ -2,12 +2,14 @@
 
 import datetime
 import json
+from urllib.parse import quote, unquote, urlencode
+
+from bs4 import BeautifulSoup
+from flask import abort, Flask, jsonify, request
+from flask_cors import CORS
 import psycopg2
 import requests
-from bs4 import BeautifulSoup
-from flask import Flask, request, jsonify, abort
-from flask_cors import CORS
-from urllib.parse import quote, unquote, urlencode
+
 
 app = Flask(__name__)
 CORS(app)
@@ -20,12 +22,12 @@ with open('./config.json', 'r') as f:
 
 def get_limit_offset(request):
     try:
-        limit = int(request.args.get('limit'))
-    except Exception as e:
+        limit = int(request.args.get('limit', ''))
+    except ValueError:
         limit = 30
     try:
-        offset = int(request.args.get('offset'))
-    except Exception as e:
+        offset = int(request.args.get('offset', ''))
+    except ValueError:
         offset = 0
     return (limit, offset)
 

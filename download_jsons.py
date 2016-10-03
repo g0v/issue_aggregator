@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import json
-import re
 import requests
 
 
@@ -20,10 +19,9 @@ def download_repos(session, repo_list_fpath, out_fpath):
 
     result = []
     for url in map(lambda u: u.replace('github.com', 'api.github.com/repos'), urls):
-        url = url[:-1] if url[-1] is '/' else url
+        url = url[:-1] if url[-1] == '/' else url
         print(url)
         response = session.get(url)
-        # response.raise_for_status()
         if response.status_code // 100 != 2:
             continue
         j = response.json()
@@ -46,10 +44,11 @@ def download_issues(session, repo_json_fpath, out_issues_fpath, out_labels_fpath
     for repo in repos:
         url = repo['url'] + '/issues?state=open'
         page = url
-        while page is not None:
+        while page:
             print(page)
 
             response = session.get(page)
+            page = response.links.get('next', {}).get('url', '')
             response.raise_for_status()
 
             js = response.json()
@@ -58,12 +57,6 @@ def download_issues(session, repo_json_fpath, out_issues_fpath, out_labels_fpath
 
             result += js
             labels += [l['name'] for j in js for l in j['labels']]
-
-            if 'Link' not in response.headers:
-                page = None
-            else:
-                matches = re.findall(r'\<(\S*)\>; rel="next"', response.headers['Link'])
-                page = matches[0] if len(matches) > 0 else None
 
     with open(out_issues_fpath, 'w+') as f:
         f.write(json.dumps(result))
@@ -75,7 +68,7 @@ def download_issues(session, repo_json_fpath, out_issues_fpath, out_labels_fpath
 
 def download():
     authtoken = get_authtoken()
-    if authtoken is None:
+    if not authtoken:
         raise Exception('Autoken not set in config.json')
 
     s = requests.Session()

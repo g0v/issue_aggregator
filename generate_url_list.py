@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import json
+from subprocess import PIPE, Popen
+
 from requests import get
-from subprocess import Popen, PIPE
+
 
 repo_master_raw = 'https://raw.githubusercontent.com/g0v/awesome-g0v/master/'
 readme = 'readme.md'
@@ -30,7 +32,6 @@ def run_parser():
             print(p.stdout.read().decode('utf-8'))
     except Exception as e:
         print(e)
-        pass
 
 
 def output_url_list():

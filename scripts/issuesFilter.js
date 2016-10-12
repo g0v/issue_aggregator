@@ -18,7 +18,7 @@ const IssuesFilterForm = React.createClass({
     let styleFormBox = { border:'1px solid rgba(0,0,0,0.10)', height:44, lineHeight:'44px', borderRadius:5, overflow:'hidden'};
     let styleSelectFilter = {
       box:{ position:'relative', display:'inline-block', width:'15%', height:'inherit', backgroundColor:'#FAFAFA' },
-      select:{ position:'relative', zIndex:'10', padding:'0 10px', paddingRight:10+16, fontSize:'17px', letterSpacing:'2.12px', color:'#4a4a4a' },
+      select:{ position:'relative', zIndex:'10', height:'100%', padding:'0 10px', paddingRight:10+16, fontSize:'17px', letterSpacing:'2.12px', color:'#4a4a4a' },
       inspector:{ position:'absolute', right:10, top:'50%', marginTop:-3, borderWidth:'6px 4px 0', borderStyle:'solid', borderColor:'transparent', borderTopColor:'#4a4a4a' }
     };
     let styleTextfield = { width:'85%', padding:'0 10px', color:'#3b3b3b' };

@@ -106,12 +106,31 @@ const Issue = React.createClass({
 
 const IssuesFilter = React.createClass({
   getInitialState: function() {
-    return {filters:[], data:[], repos:[], reposMapping:{}};
+    const throttle = function(callback, wait) {
+      var time = Date.now();
+      return function() {
+        if ((time + wait - Date.now()) < 0) {
+          callback();
+          time = Date.now();
+        }
+      }
+    }
+    window.addEventListener("scroll", throttle(this.handleScroll, 1000));
+
+    return {filters:[], data:[], repos:[], reposMapping:{}, offset:0};
   },
   componentDidMount: function() {
     this.load();
   },
-  load: function() {
+  handleScroll: function() {
+    let scrollHeight = $(document).height();
+    let scrollPosition = $(window).scrollTop() + $(window).height();
+
+    if (scrollPosition * 2 > scrollHeight) {
+      this.load(this.state.offset + 10);
+    }
+  },
+  load: function(offset=0) {
     const HOSTNAME = "//ec2-54-238-189-115.ap-northeast-1.compute.amazonaws.com";
     let groupedFilters = {};
     this.state.filters.forEach(function(filter) {
@@ -122,17 +141,43 @@ const IssuesFilter = React.createClass({
       groupedFilters[paramKey].push(filter.query);
     })
     let params = Object.keys(groupedFilters).map(function(paramKey) { return (paramKey + '=' + groupedFilters[paramKey].join()); });
+    params.push("limit=10");
+    params.push("offset=" + offset);
+
     let apiUrl = HOSTNAME + "/api/issues" + (params.length > 0 ? '?' : '') + params.join('&');
     //console.log('issue loading: ', apiUrl);
 
-    $.getJSON(apiUrl, function(dataIssues) {
-      this.setState({data: dataIssues.result});
-      let repoIds = dataIssues.result.map(function(dataIssue) { return dataIssue.repo_id; });
-      if ( repoIds.length !== 0 ) {
-        $.getJSON(HOSTNAME + "/api/repos?ids="+repoIds.join(), function(dataRepos) {
+    $.getJSON(apiUrl, function(response) {
+      let dataIssues = response.result;
+      let repoIds = dataIssues.map(function(dataIssue) { return dataIssue.repo_id; });
+      if (repoIds.length !== 0) {
+        $.getJSON(HOSTNAME + "/api/repos?ids=" + repoIds.join(), function(response) {
+          let dataRepos = response.result;
           let reposMapping = this.state.reposMapping;
-          dataRepos.result.forEach(function(dataRepo, index) { reposMapping[dataRepo.id] = index; });
-          this.setState({repos:dataRepos.result, reposMapping: reposMapping});
+          let allIssues = this.state.data;
+          let allRepos = this.state.repos;
+
+          dataIssues.forEach(function(dataIssue, index) {
+            let duplicate = allIssues.find(function(issue) { return issue.id == dataIssue.id });
+            if (!duplicate) {
+              allIssues.push(dataIssue);
+            }
+          });
+
+          dataRepos.forEach(function(dataRepo, index) {
+            let duplicate = allRepos.find(function(repo) { return repo.id == dataRepo.id });
+            if (!duplicate) {
+              allRepos.push(dataRepo);
+              reposMapping[dataRepo.id] = index;
+            }
+          });
+
+          this.setState({
+            data: allIssues,
+            repos: allRepos,
+            reposMapping: reposMapping,
+            offset: offset
+          });
         }.bind(this));
       }
     }.bind(this));
@@ -144,14 +189,14 @@ const IssuesFilter = React.createClass({
       let addFilter = e.state;
       if ( !filtersJson.indexOf(JSON.stringify(addFilter)) >= 0 ) {
         filters.push(addFilter);
-        this.setState({filters: filters}, this.load);
+        this.setState({data: [], repos: [], reposMapping: {}, filters: filters, offset: 0}, this.load);
       }
     }.bind(this);
 
     let handleRemoveFilterButtonClick = function(e) {
       let filters = JSON.parse(JSON.stringify(this.state.filters));
       filters.splice(e.currentTarget.value, 1);
-      this.setState({filters: filters}, this.load);
+      this.setState({data: [], repos: [], reposMapping: {}, filters: filters, offset: 0}, this.load);
     }.bind(this);
 
     let styleContainer = { width:"96%", maxWidth:960, minHeight:'100vh', margin:"auto", padding:"26px 44px", backgroundColor:"white" };
